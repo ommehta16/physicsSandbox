@@ -1,6 +1,4 @@
 # physicsSandbox
 
 # TODO
- - Mkea the physics simulator
- - write the program
- - make stuff
+ - Fix `collide(Square other)` in Square.java

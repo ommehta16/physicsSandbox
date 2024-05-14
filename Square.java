@@ -1,5 +1,4 @@
 import java.awt.Color;
-import java.util.ArrayList;
 
 public class Square {
     private double[] position;
@@ -16,7 +15,7 @@ public class Square {
         velocity = vel;
         length = len;
         elasticness = elastic;
-        gravity = 0.001;
+        gravity = 0*0.001;
         color = col;
     }
 
@@ -25,7 +24,7 @@ public class Square {
         velocity = new double[] {0,0};
         length = 0.1;
         elasticness = 0.5;
-        gravity = 0.001;
+        gravity = 0*0.001;
         color = colors[(int)(Math.random() * colors.length)];
     }
     public void move() {
@@ -40,15 +39,11 @@ public class Square {
         if (position[1] + length >= 1)  {velocity[1] *= -elasticness; position[1] = (1-length+3*position[1])/4;}
 
     }
-    public boolean collide(Ball otherBall) {
-        
-        return true;
-    }
     public boolean containsPoint (double x, double y) {
         if ((position[0]-length <= x && position[0]+length >= x) && (position[1]-length <= y && position[1]+length >= y)) return true;
         return false;
     }
-    
+    // TODO: FIX COLLIDE 
     public boolean collide(Square other) {
         double[] vertXs = {position[0]-length,position[0]+length,position[0]+length,position[0]-length};
         double[] vertYs = {position[1]-length,position[1]-length,position[1]+length,position[1]+length};
@@ -70,15 +65,18 @@ public class Square {
         position = new double[] {position[0]+velocity[0], position[1]+velocity[1]};
         
         other.velocity = new double[] {elasticness * -othMag * diffX/dist, elasticness * -othMag * diffY/dist};
-        other.position = new double[] {other.position[0]+other.velocity[0], other.position[1]+other.velocity[1]};
+        other.position = new double[] {other.position[0]+2*other.velocity[0], other.position[1]+2*other.velocity[1]};
         return true;
     }
+
+    // ^^^^^
 
     public void draw() {
         StdDraw.setPenColor(color);
         StdDraw.filledSquare(position[0], position[1], length);
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.square(position[0], position[1], length);
+        //StdDraw.picture(position[0],position[1],"dvd.png",4*length,2*length);
     }
     public double[] getPos() {
         return position;
