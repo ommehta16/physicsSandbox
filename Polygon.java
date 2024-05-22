@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.util.ArrayList;
 
 public class Polygon {
     private double[] position;
@@ -99,6 +100,7 @@ public class Polygon {
         double xT = point[0];
         double yT = point[1];
         boolean contained = false;
+        ArrayList<double[]> collidedAt = new ArrayList<double[]>();
         for (int i = 0; i < points.length; i++) {
             double x1 = points[i][0];
             double x2 = points[(i + 1) % points.length][0];
@@ -109,8 +111,11 @@ public class Polygon {
             if (x2 == x1) xI = x1;
 
             if ((xI <= xT) && ((x2 >= xI && xI >= x1) || (x1 >= xI && xI >= x2))
-                           && ((y2 >= yT && yT >= y1) || (y1 >= yT && yT >= y2)))
-                           contained = !contained;
+                           && ((y2 >= yT && yT >= y1) || (y1 >= yT && yT >= y2))
+                           && !collidedAt.contains(new double[] {xI,yT})) {
+                contained = !contained;
+                collidedAt.add(new double[] {xI,yT});
+            };
         }
         return contained;
     }
@@ -161,6 +166,28 @@ public class Polygon {
             velocity = new double[] { elasticness * velMag * diffX / dist, elasticness * velMag * diffY / dist };
             other.velocity = new double[] { -other.elasticness * othMag * diffX / dist,
                     -other.elasticness * othMag * diffY / dist };
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean collide(Polyline other) {
+        double[][] otherPoints = other.getPoints();
+        int otherSides = points.length;
+        double[] dists = new double[otherSides + 1];
+        dists[otherSides] = Double.POSITIVE_INFINITY;
+
+        for (int i = 0; i < otherPoints.length; i++) {
+            if (!containsPoint(otherPoints[i])) continue;
+            double velMag = Math.sqrt(Math.pow(velocity[0], 2) + Math.pow(velocity[1], 2));
+
+            double dist = Math.sqrt(Math.pow(position[0] - otherPoints[i][0], 2) + Math.pow(position[1] - otherPoints[i][1], 2));
+            double diffX = position[0] - otherPoints[i][0];
+            double diffY = position[1] - otherPoints[i][1];
+
+            velocity = new double[] { elasticness * velMag * diffX / dist, elasticness * velMag * diffY / dist };
 
             return true;
         }

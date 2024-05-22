@@ -126,6 +126,26 @@ public class Ball {
 
         return true;
     }
+    
+    public boolean collide (Polyline other) {
+
+        double[] closePoint = other.closestPoint(position, radius/20);
+        
+        double x = closePoint[0];
+        double y = closePoint[1];
+
+        double dist = Math.sqrt(Math.pow(x - position[0], 2) + Math.pow(y - position[1], 2));
+        if (dist > radius) return false;
+
+        double velMag = Math.sqrt(Math.pow(velocity[0], 2) + Math.pow(velocity[1], 2));
+
+        double diffX = position[0] - x;
+        double diffY = position[1] - y;
+
+        velocity = new double[] { elasticness * velMag * diffX / dist, elasticness * velMag * diffY / dist };
+
+        return true;
+    }
 
     public void draw() {
         StdDraw.setPenColor(color);

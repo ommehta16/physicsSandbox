@@ -3,9 +3,13 @@ import java.awt.Color;
 
 public class Sandbox {
     public static void main(String[] args) {
-        final Color[] colors = { StdDraw.RED, StdDraw.ORANGE, StdDraw.YELLOW, StdDraw.GREEN, StdDraw.BLUE,
-                StdDraw.MAGENTA, StdDraw.BLACK, StdDraw.CYAN, StdDraw.LIGHT_GRAY, StdDraw.PINK, StdDraw.PINK,
-                StdDraw.YELLOW, StdDraw.DARK_GRAY };
+        //final Color[] colors = { StdDraw.RED, StdDraw.ORANGE, StdDraw.YELLOW, StdDraw.GREEN, StdDraw.BLUE,
+        //        StdDraw.MAGENTA, StdDraw.BLACK, StdDraw.CYAN, StdDraw.LIGHT_GRAY, StdDraw.PINK, StdDraw.PINK,
+        //        StdDraw.YELLOW, StdDraw.DARK_GRAY };
+        Color[] colors = new Color[100];
+        for (int i = 0; i < colors.length; i++) {
+            colors[i] = new Color((float) Math.random(), (float) Math.random(), (float) Math.random());
+        }
         final int shapes = 15;
         double radius = 0;
         int zapTimer = 0;
@@ -18,6 +22,12 @@ public class Sandbox {
 
         Ball[] balls = new Ball[0];
         Polygon[] polys = new Polygon[0];
+        Polyline[] polylines = new Polyline[1];
+        polylines[1] = new Polyline(new double[][]{
+            {0,0},
+            {0.1,0.1},
+            {0.1,0.2}
+        },0.7);
 
         StdDraw.setXscale(-1.0, 1.0);
         StdDraw.setYscale(-1.0, 1.0);
@@ -26,7 +36,7 @@ public class Sandbox {
         while (true) {
             StdDraw.clear(StdDraw.WHITE);
 
-            update(balls, polys);
+            update(balls, polys,polylines);
 
             double x = StdDraw.mouseX();
             double y = StdDraw.mouseY();
@@ -41,7 +51,7 @@ public class Sandbox {
                 else {
                     
                     // create center
-                    if (center[0] == Double.POSITIVE_INFINITY) center = new double[] { x, y };
+                    if (center[0] == Double.POSITIVE_INFINITY && menuOption != 18) center = new double[] { x, y };
 
                     // update stuff if shape alr being built
                     else if (menuOption <= shapes) {
@@ -66,10 +76,8 @@ public class Sandbox {
                                 zapCenter = polys[toZap[1]].getPos();
                                 Polygon[] newPolys = new Polygon[polys.length - 1];
                                 for (int i = 0; i < polys.length; i++) {
-                                    if (i != toZap[1])
-                                        newPolys[i + add] = polys[i];
-                                    else
-                                        add = -1;
+                                    if (i != toZap[1]) newPolys[i + add] = polys[i];
+                                    else add = -1;
                                 }
                                 polys = newPolys;
                             } else if (balls.length >= 1) {
@@ -173,9 +181,10 @@ public class Sandbox {
 
     private static Polygon[] addPoly(double radius, int selectedShape, double rotation, double[] center,
             Polygon[] polys) {
-        final Color[] colors = { StdDraw.RED, StdDraw.ORANGE, StdDraw.YELLOW, StdDraw.GREEN, StdDraw.BLUE,
-                StdDraw.MAGENTA, StdDraw.BLACK, StdDraw.CYAN, StdDraw.LIGHT_GRAY, StdDraw.PINK, StdDraw.PINK,
-                StdDraw.YELLOW, StdDraw.DARK_GRAY };
+        Color[] colors = new Color[30];
+        for (int i = 0; i < colors.length; i++) {
+            colors[i] = new Color((float) Math.random(), (float) Math.random(), (float) Math.random());
+        }
 
         Polygon[] newPolys = new Polygon[polys.length + 1];
         for (int i = 0; i < polys.length; i++)
@@ -187,9 +196,10 @@ public class Sandbox {
     }
 
     private static Ball[] addBall(double radius, double[] center, Ball[] balls) {
-        final Color[] colors = { StdDraw.RED, StdDraw.ORANGE, StdDraw.YELLOW, StdDraw.GREEN, StdDraw.BLUE,
-                StdDraw.MAGENTA, StdDraw.BLACK, StdDraw.CYAN, StdDraw.LIGHT_GRAY, StdDraw.PINK, StdDraw.PINK,
-                StdDraw.YELLOW, StdDraw.DARK_GRAY };
+        Color[] colors = new Color[30];
+        for (int i = 0; i < colors.length; i++) {
+            colors[i] = new Color((float) Math.random(), (float) Math.random(), (float) Math.random());
+        }
 
         Ball[] newBalls = new Ball[balls.length + 1];
         for (int i = 0; i < balls.length; i++)
@@ -201,10 +211,12 @@ public class Sandbox {
         return balls;
     }
 
-    public static void update(Ball[] balls, Polygon[] polys) {
+    public static void update(Ball[] balls, Polygon[] polys, Polyline[] polylines) {
         ArrayList<int[]> ballCollisions = new ArrayList<int[]>();
         ArrayList<int[]> polyCollisions = new ArrayList<int[]>();
         ArrayList<int[]> bpCollisions = new ArrayList<int[]>();
+        ArrayList<int[]> bplCollisions = new ArrayList<int[]>();
+        ArrayList<int[]> pplCollisions = new ArrayList<int[]>();
 
         for (int i = 0; i < balls.length; i++) {
             balls[i].bounceWall();
@@ -220,7 +232,8 @@ public class Sandbox {
                     if (!polyCollisions.contains(new int[] { i, j }) && !polyCollisions.contains(new int[] { j, i })) {
                         if (polys[i].collide(polys[j]))
                             polyCollisions.add(new int[] { i, j });
-                    }
+            }
+            // collide with polyline
             polys[i].move();
             polys[i].updatePoints();
             polys[i].draw();
