@@ -1,33 +1,30 @@
 import java.util.ArrayList;
 import java.awt.Color;
 
+// TODO: Find where circles went :(
+
 public class Sandbox {
     public static void main(String[] args) {
-        //final Color[] colors = { StdDraw.RED, StdDraw.ORANGE, StdDraw.YELLOW, StdDraw.GREEN, StdDraw.BLUE,
-        //        StdDraw.MAGENTA, StdDraw.BLACK, StdDraw.CYAN, StdDraw.LIGHT_GRAY, StdDraw.PINK, StdDraw.PINK,
-        //        StdDraw.YELLOW, StdDraw.DARK_GRAY };
         Color[] colors = new Color[100];
         for (int i = 0; i < colors.length; i++) {
             colors[i] = new Color((float) Math.random(), (float) Math.random(), (float) Math.random());
         }
+
+        final double inf = Double.POSITIVE_INFINITY;
         final int shapes = 15;
         double radius = 0;
-        int zapTimer = 0;
-        double[][] zapLine = {{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY},{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY}};
+        int inTimer = 0;
+        double[][] zapLine = {{inf,inf},{inf,inf}};
         int menuOption = 0;
         int hoveredOption = -1;
         double rotation = 0;
-        double[] center = { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
-        double[] zapCenter = {Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
+        double[] center = { inf, inf };
+        double[] zapCenter = {inf,inf};
+        ArrayList<double[]> plPoints = new ArrayList<double[]>();
 
         Ball[] balls = new Ball[0];
         Polygon[] polys = new Polygon[0];
-        Polyline[] polylines = new Polyline[1];
-        polylines[1] = new Polyline(new double[][]{
-            {0,0},
-            {0.1,0.1},
-            {0.1,0.2}
-        },0.7);
+        Polyline[] polylines = new Polyline[0];
 
         StdDraw.setXscale(-1.0, 1.0);
         StdDraw.setYscale(-1.0, 1.0);
@@ -41,22 +38,28 @@ public class Sandbox {
             double x = StdDraw.mouseX();
             double y = StdDraw.mouseY();
             
-            zapTimer--;
+            inTimer--;
 
             if (StdDraw.isMousePressed()) {
 
                 // UI/select item
-                if (hoveredOption != -1 && (hoveredOption <= shapes || hoveredOption == 19 || hoveredOption == 18)) menuOption = hoveredOption;
-                
+                if (hoveredOption != -1 && (hoveredOption <= shapes+1 || hoveredOption == 19 || hoveredOption == 18)) menuOption = hoveredOption;
+                else if (menuOption == 1) {
+                    if (plPoints.size() > 0) {
+                        if (!(plPoints.get(plPoints.size()-1)[0] == x && plPoints.get(plPoints.size()-1)[1] == y)) plPoints.add(new double[] {x,y});
+                    }
+                    else plPoints.add(new double[] {x,y});
+                }
                 else {
-                    
                     // create center
-                    if (center[0] == Double.POSITIVE_INFINITY && menuOption != 18) center = new double[] { x, y };
+                    if (center[0] == inf && menuOption != 18 && menuOption != 1) center = new double[] { x, y };
 
                     // update stuff if shape alr being built
-                    else if (menuOption <= shapes) {
+                    else if (menuOption == 0 || (2 <= menuOption && menuOption <= shapes+1)) {
                         StdDraw.line(x, y, center[0], center[1]);
-                        radius = Math.max(Math.sqrt(Math.pow(x - center[0], 2) + Math.pow(y - center[1], 2)), 0.02);
+                        
+                        if (menuOption == 0) radius = Math.max(Math.sqrt(Math.pow(x - center[0], 2) + Math.pow(y - center[1], 2)), 0.02);
+                        else radius = Math.max(Math.sqrt(Math.pow(x - center[0], 2) + Math.pow(y - center[1], 2)), 0.05);
 
                         if (x - center[0] == 0) rotation = Math.PI / 2 * Math.signum(y - center[0]);
                         else if (x - center[0] < 0) rotation = Math.PI + Math.atan((y - center[1]) / (x - center[0]));
@@ -64,11 +67,11 @@ public class Sandbox {
                     }
 
                     if (menuOption == 0) StdDraw.circle(center[0], center[1], radius);
-                    else if (menuOption <= shapes) previewPolygon(radius, menuOption, rotation, center);
+                    else if (2 <= menuOption && menuOption <= shapes+1) previewPolygon(radius, menuOption-1, rotation, center);
 
                     // zap if its like that
                     else if (menuOption == 18) {
-                        if (zapTimer < 0) {
+                        if (inTimer < 0) {
                             int add = 0;
                             int[] toZap = zap(balls, polys);
                             if (toZap[0] == 0 && polys.length >= 1) {
@@ -92,20 +95,20 @@ public class Sandbox {
                                 balls = newBalls;
                             }
                             else {
-                                zapCenter = new double[] {Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
-                                zapLine = new double[][] {{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY},zapCenter};
+                                zapCenter = new double[] {inf,inf};
+                                zapLine = new double[][] {{inf,inf},zapCenter};
                             }
-                            zapTimer = 10;
+                            inTimer = 10;
                             zapLine = new double[][] {new double[] {x,y}, zapCenter};
                             
                             StdDraw.setPenColor(StdDraw.RED);
-                            if (zapLine[0][0] < 1 && zapLine[1][0] < 1 && zapTimer > 0) {
+                            if (zapLine[0][0] < 1 && zapLine[1][0] < 1 && inTimer > 0) {
                                 StdDraw.line(zapLine[0][0], zapLine[0][1], zapLine[1][0], zapLine[1][1]);
                             }
                         }
                         else {
-                            zapCenter = new double[] {Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
-                            zapLine = new double[][] {{Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY},zapCenter};
+                            zapCenter = new double[] {inf,inf};
+                            zapLine = new double[][] {{inf,inf},zapCenter};
                         }
                     }
                     // end zap
@@ -113,11 +116,11 @@ public class Sandbox {
             }
             // letting go
             else if (radius > 0) { // create shape
-                if (menuOption == 0)            balls = addBall(radius,                       center, balls);
-                else if (menuOption <= shapes)  polys = addPoly(radius, menuOption, rotation, center, polys);
+                if (menuOption == 0)                                balls = addBall(radius,                         center, balls);
+                else if (2 <= menuOption && menuOption <= shapes+1) polys = addPoly(radius, menuOption-1, rotation, center, polys);
 
                 radius = 0;
-                center = new double[] { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
+                center = new double[] { inf, inf };
                 rotation = 0;
             }
             else if (menuOption == 19) { // delete all
@@ -125,16 +128,29 @@ public class Sandbox {
                 menuOption = 0;
                 hoveredOption = -1;
                 rotation = 0;
-                center = new double[] { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
+                center = new double[] { inf, inf };
 
                 balls = new Ball[0];
                 polys = new Polygon[0];
+                polylines = new Polyline[0];
             }
             else { // reset option
                 if (-1 < x && x < -0.9) hoveredOption = (9 - (int) (10 * (y + 1)) + 10);
                 else hoveredOption = -1;
             }
+            if (menuOption == 1) {
+                for (int j = 0; j < plPoints.size()-1; j++) {
+                    double[] start = plPoints.get(j);
+                    double[] end = plPoints.get(j+1);
 
+                    StdDraw.line(start[0], start[1], end[0], end[1]);
+                }
+                if (StdDraw.isKeyPressed(32) && inTimer < -10 && plPoints.size() > 1) {
+                    double[][] plArray = plPoints.toArray(new double[1][2]);
+                    polylines = addPolyLine(plArray, polylines);
+                    plPoints = new ArrayList<double[]>();
+                }
+            }
             drawUI(shapes, menuOption, hoveredOption);
             StdDraw.show();
             StdDraw.pause(20);
@@ -171,11 +187,12 @@ public class Sandbox {
             for (int j = 0; j < i; j++) {
                 double theta = j * Math.PI * 2 / i + Math.PI / 2;
                 xS[j] = -0.95 + 0.04 * Math.cos(theta);
-                yS[j] = 0.95 - 0.1 * (i - 2) + 0.04 * Math.sin(theta);
+                yS[j] = 0.85 - 0.1 * (i - 2) + 0.04 * Math.sin(theta);
             }
             StdDraw.polygon(xS, yS);
         }
         StdDraw.picture(-0.95, -0.95, "reload.png", 0.1, 0.1);
+        StdDraw.picture(-0.95, 0.85, "polyLine.png", 0.1, 0.1);
         StdDraw.picture(-0.95, -0.85, "exit.png", 0.1, 0.1);
     }
 
@@ -191,6 +208,21 @@ public class Sandbox {
             newPolys[i] = polys[i];
         newPolys[newPolys.length - 1] = new Polygon(center, new double[] { 0, 0 }, radius, 0.7,
                 colors[(int) (Math.random() * colors.length)], selectedShape + 2, rotation);
+        polys = newPolys;
+        return polys;
+    }
+    
+    private static Polyline[] addPolyLine(double[][] points,
+            Polyline[] polys) {
+        Color[] colors = new Color[30];
+        for (int i = 0; i < colors.length; i++) {
+            colors[i] = new Color((float) Math.random(), (float) Math.random(), (float) Math.random());
+        }
+
+        Polyline[] newPolys = new Polyline[polys.length + 1];
+        for (int i = 0; i < polys.length; i++)
+            newPolys[i] = polys[i];
+        newPolys[newPolys.length - 1] = new Polyline(points,0.7);
         polys = newPolys;
         return polys;
     }
@@ -220,8 +252,9 @@ public class Sandbox {
 
         for (int i = 0; i < balls.length; i++) {
             balls[i].bounceWall();
-            for (int j = i+1; j < balls.length; j++) if (!ballCollisions.contains(new int[] { i, j })) if (balls[i].collide(balls[j])) ballCollisions.add(new int[] { i, j });
-            for (int j = 0  ; j < polys.length; j++) if (!  bpCollisions.contains(new int[] { i, j })) if (balls[i].collide(polys[j])) bpCollisions  .add(new int[] { i, j });
+            for (int j = i+1; j < balls.length; j++) if (!ballCollisions.contains(new int[] { i, j })) if (balls[i].collide(balls    [j])) ballCollisions.add(new int[] { i, j });
+            for (int j = 0  ; j < polys.length; j++) if (!  bpCollisions.contains(new int[] { i, j })) if (balls[i].collide(polys    [j])) bpCollisions  .add(new int[] { i, j });
+            for (int j = 0  ; j < polylines.length; j++) if (! bplCollisions.contains(new int[] { i, j })) if (balls[i].collide(polylines[j])) bplCollisions .add(new int[] { i, j });
             balls[i].move();
         }
 
@@ -233,11 +266,14 @@ public class Sandbox {
                         if (polys[i].collide(polys[j]))
                             polyCollisions.add(new int[] { i, j });
             }
+            for (int j = 0  ; j < polylines.length; j++) if (!pplCollisions.contains(new int[] { i, j })) if (polys[i].collide(polylines[j])) bplCollisions .add(new int[] { i, j });
             // collide with polyline
             polys[i].move();
             polys[i].updatePoints();
             polys[i].draw();
         }
+
+        for (int i = 0; i < polylines.length; i++) polylines[i].draw();
         for (int i = 0; i < balls.length; i++) balls[i].draw();
     }
 

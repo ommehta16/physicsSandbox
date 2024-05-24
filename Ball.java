@@ -21,6 +21,9 @@ public class Ball {
         position[0] += velocity[0];
         position[1] += velocity[1];
         velocity[1] -= gravity;
+
+        velocity[0] *= 0.98;
+        velocity[1] *= 0.98;
     }
 
     public void bounceWall() {
@@ -88,6 +91,8 @@ public class Ball {
         for (int i = 0; i < dists.length; i++) if (dists[i] < dists[minInd]) minInd=i;
         for (int i = 0; i < dists.length; i++) if (dists[i] < dists[min2nd] && i != minInd) min2nd=i;
         
+        
+
         double x1 = points[minInd][0];
         double x2 = points[min2nd][0];
         double y1 = points[minInd][1];
@@ -120,16 +125,21 @@ public class Ball {
         double diffX = position[0] - x;
         double diffY = position[1] - y;
 
-        velocity = new double[] { elasticness * velMag * diffX / dist, elasticness * velMag * diffY / dist };
-        other.setVel(new double[] { other.getElastic() * -othMag * diffX / dist,
-                                    other.getElastic() * -othMag * diffY / dist });
+        velocity = new double[] {   (elasticness * velMag * diffX / dist)/1,
+                                    (elasticness * velMag * diffY / dist)/1 };
+        other.setVel(new double[] { other.getElastic()  * -othMag * diffX / dist,
+                                    other.getElastic()  * -othMag * diffY / dist });
 
         return true;
     }
     
     public boolean collide (Polyline other) {
+        
+        double[][] collInfo = other.closestPoint(position, radius/20);
 
-        double[] closePoint = other.closestPoint(position, radius/20);
+        double[] closePoint = collInfo[0];
+        double[] startL = collInfo[1];
+        double[] endL = collInfo[2];
         
         double x = closePoint[0];
         double y = closePoint[1];
@@ -137,12 +147,29 @@ public class Ball {
         double dist = Math.sqrt(Math.pow(x - position[0], 2) + Math.pow(y - position[1], 2));
         if (dist > radius) return false;
 
-        double velMag = Math.sqrt(Math.pow(velocity[0], 2) + Math.pow(velocity[1], 2));
+        double cLMag = Math.sqrt(Math.pow(endL[1] - startL[1], 2) + Math.pow(endL[0] - startL[0], 2));
 
-        double diffX = position[0] - x;
-        double diffY = position[1] - y;
+        // invert projection of velocity onto dL, then project back to normal --> hooray!
 
-        velocity = new double[] { elasticness * velMag * diffX / dist, elasticness * velMag * diffY / dist };
+        double[] collideLine = {(endL[0]-startL[0])/cLMag,(endL[1]-startL[1])/cLMag};
+        // now, project velocity onto collideline (let collideline = c, velocity = v, projection = p)
+        // p = (v dot c) * c
+        double dot = velocity[0]*collideLine[0] + velocity[1] * collideLine[1];
+
+
+        double[] projVector = new double[] {dot*collideLine[0],dot*collideLine[1]};
+        double[] orthoVector = new double[] {velocity[0] - projVector[0],velocity[1]-projVector[1]};
+
+        velocity = new double[] {projVector[0]-elasticness*orthoVector[0],projVector[1]-elasticness*orthoVector[1]};
+
+        if (dist < 0.5 * radius) {
+            double diffX = position[0] - x;
+            double diffY = position[1] - y;
+            double velMag = Math.sqrt(Math.pow(velocity[1], 2) + Math.pow(velocity[0], 2));
+
+            velocity = new double[] { velMag * diffX / dist, velMag * diffY / dist };
+            position = new double[] {position[0]+velocity[0],position[1]+velocity[1]};
+        }
 
         return true;
     }

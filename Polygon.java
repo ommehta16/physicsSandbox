@@ -22,6 +22,7 @@ public class Polygon {
         points = new double[sides][2];
         rotation = rot;
         gravity = 0.001;
+        updatePoints();
     }
 
     public void move() {
@@ -95,7 +96,68 @@ public class Polygon {
         }
         return closePoint;
     }
+    public double[] intersectLine(double[] start, double[] end) {
+        double xI, yI, xT1,xT2,yT1,yT2,mT,bT;
+        xI = Double.POSITIVE_INFINITY;
+        yI = Double.POSITIVE_INFINITY;
+        xT1 = start[0];
+        xT2 = end[0];
+        yT1 = start[1];
+        yT2 = end[1];
 
+        mT = (yT2-yT1)/(xT2-xT1);
+        boolean verticalT = (xT2-xT1 == 0);
+        
+        bT = Double.POSITIVE_INFINITY;
+        if (!verticalT) bT = yT1-mT*xT1;
+
+        ArrayList<double[]> intersections = new ArrayList<double[]>();
+
+        for (int i = 0; i < points.length-1; i++) {
+            double xL1, xL2, yL1, yL2, mL, bL;
+            xL1 = points[i][0];
+            xL2 = points[i+1][0];
+            yL1 = points[i][1];
+            yL2 = points[i+1][1];
+
+            mL = (yL2-yL1)/(xL2-xL1);
+            boolean verticalL = (xL2-xL1 == 0);
+            
+            bL = Double.POSITIVE_INFINITY;
+            if (!verticalL) bL = yL1-mL*xL1;
+
+            if ((verticalL && verticalT) || mL == mT) continue;
+            else if (verticalL) {
+                xI = xL1;
+                yI = mT * xI + bT;
+            }
+            else if (verticalT) {
+                xI = xT1;
+                yI = mL * xI + bL;
+            }
+            else {
+                xI = (bT-bL)/(mL-mT);
+                yI = mT * xI + bT;
+            }
+            
+            if (
+                !(Math.min(xT1,xT2) < xI && xI < Math.max(xT1,xT2) &&
+                Math.min(yT1,yT2) < yI && yI < Math.max(yT1,yT2) &&
+                Math.min(xL1,xL2) < xI && xI < Math.max(xL1,xL2) &&
+                Math.min(yL1,yL2) < yI && yI < Math.max(yL1,yL2))
+            ) continue;
+
+            intersections.add(new double[] {xI,yI});
+        }
+        if (intersections.size() == 0) return new double[] {Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
+
+        double[] bestIntersect = intersections.get(0);
+        for (int i = 0; i < intersections.size(); i++) {
+            if (intersections.get(i)[1] < bestIntersect[1]) bestIntersect = intersections.get(i);
+        }
+        return bestIntersect;
+        
+    }
     public boolean containsPoint(double[] point) {
         double xT = point[0];
         double yT = point[1];
@@ -146,7 +208,7 @@ public class Polygon {
 
     return contained;
     */
-    // TODO: make them collide better (more like polygons than circles)
+
     public boolean collide(Polygon other) {
         double[][] otherPoints = other.getPoints();
         int otherSides = points.length;
@@ -175,19 +237,44 @@ public class Polygon {
 
     public boolean collide(Polyline other) {
         double[][] otherPoints = other.getPoints();
-        int otherSides = points.length;
-        double[] dists = new double[otherSides + 1];
-        dists[otherSides] = Double.POSITIVE_INFINITY;
 
-        for (int i = 0; i < otherPoints.length; i++) {
-            if (!containsPoint(otherPoints[i])) continue;
-            double velMag = Math.sqrt(Math.pow(velocity[0], 2) + Math.pow(velocity[1], 2));
+        for (int i = 0; i < otherPoints.length-1; i++) {
+            double[] intersectsAt = intersectLine(otherPoints[i], otherPoints[i+1]);
+            if (Double.isInfinite(intersectsAt[0])) continue;
 
-            double dist = Math.sqrt(Math.pow(position[0] - otherPoints[i][0], 2) + Math.pow(position[1] - otherPoints[i][1], 2));
-            double diffX = position[0] - otherPoints[i][0];
-            double diffY = position[1] - otherPoints[i][1];
+            double[] closePoint = intersectsAt;
+            double[] startL = otherPoints[i];
+            double[] endL = otherPoints[i+1];
+            
+            double x = closePoint[0];
+            double y = closePoint[1];
 
-            velocity = new double[] { elasticness * velMag * diffX / dist, elasticness * velMag * diffY / dist };
+            double cLMag = Math.sqrt(Math.pow(endL[1] - startL[1], 2) + Math.pow(endL[0] - startL[0], 2));
+
+            // invert projection of velocity onto dL, then project back to normal --> hooray!
+
+            double[] collideLine = {(endL[0]-startL[0])/cLMag,(endL[1]-startL[1])/cLMag};
+            // now, project velocity onto collideline (let collideline = c, velocity = v, projection = p)
+            // p = (v dot c) * c
+            double dot = velocity[0]*collideLine[0] + velocity[1] * collideLine[1];
+
+
+            double[] projVector = new double[] {dot*collideLine[0],dot*collideLine[1]};
+            double[] orthoVector = new double[] {velocity[0] - projVector[0],velocity[1]-projVector[1]};
+
+            velocity = new double[] {projVector[0]-elasticness*orthoVector[0],projVector[1]-elasticness*orthoVector[1]};
+
+            /*double velMag = Math.sqrt(Math.pow(velocity[0], 2) + Math.pow(velocity[1], 2));
+
+            double otherX = intersectsAt[0];
+            double otherY = intersectsAt[1];
+
+            double dist = Math.sqrt(Math.pow(position[0] - otherX, 2) + Math.pow(position[1] - otherY, 2));
+            
+            double diffX = position[0] - otherX - length/2;
+            double diffY = position[1] - otherY - length/2;
+
+            velocity = new double[] { elasticness * velMag * diffX / dist, elasticness * velMag * diffY / dist };*/
 
             return true;
         }
