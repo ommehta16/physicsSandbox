@@ -242,12 +242,8 @@ public class Polygon {
             double[] intersectsAt = intersectLine(otherPoints[i], otherPoints[i+1]);
             if (Double.isInfinite(intersectsAt[0])) continue;
 
-            double[] closePoint = intersectsAt;
             double[] startL = otherPoints[i];
             double[] endL = otherPoints[i+1];
-            
-            double x = closePoint[0];
-            double y = closePoint[1];
 
             double cLMag = Math.sqrt(Math.pow(endL[1] - startL[1], 2) + Math.pow(endL[0] - startL[0], 2));
 

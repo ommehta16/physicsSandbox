@@ -1,8 +1,6 @@
 import java.util.ArrayList;
 import java.awt.Color;
 
-// TODO: Find where circles went :(
-
 public class Sandbox {
     public static void main(String[] args) {
         Color[] colors = new Color[100];
@@ -194,6 +192,8 @@ public class Sandbox {
         StdDraw.picture(-0.95, -0.95, "reload.png", 0.1, 0.1);
         StdDraw.picture(-0.95, 0.85, "polyLine.png", 0.1, 0.1);
         StdDraw.picture(-0.95, -0.85, "exit.png", 0.1, 0.1);
+
+        if (selectedShape == 1) StdDraw.text(0,0.9,"Click or hold to add points; Press space to add line");
     }
 
     private static Polygon[] addPoly(double radius, int selectedShape, double rotation, double[] center,

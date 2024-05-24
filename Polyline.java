@@ -1,6 +1,3 @@
-import java.awt.Color;
-import java.util.ArrayList;
-
 public class Polyline {
     private double elasticness;
     private int sides;
