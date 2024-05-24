@@ -11,6 +11,7 @@ public class Polygon {
     private int sides;
     private double[][] points;
     public Color color;
+    public boolean sound;
 
     public Polygon(double[] pos, double[] vel, double len, double elastic, Color col, int sid, double rot) {
         position = pos;
@@ -22,7 +23,12 @@ public class Polygon {
         points = new double[sides][2];
         rotation = rot;
         gravity = 0.001;
+        sound = false;
         updatePoints();
+    }
+
+    public void playBoing() {
+        if (sound) StdAudio.playInBackground("boing.wav");
     }
 
     public void move() {
@@ -53,15 +59,19 @@ public class Polygon {
         if (lef < -0.9) {
             velocity[0] *= -elasticness;
             position[0] = (-0.9+0.01 + Math.abs(lef-position[0]) + position[0])/2;
+            if (Math.abs(velocity[0]) > 0.007) playBoing();
         } else if (rit > 1) {
             velocity[0] *= -elasticness;
             position[0] = (1-0.01 - Math.abs(rit-position[0]) + position[0])/2;
+            if (Math.abs(velocity[0]) > 0.007) playBoing();
         } if (bot < -1) {
             velocity[1] *= -elasticness;
             position[1] = (-1+0.01 + Math.abs(bot - position[1]) + position[1])/2;
+            if (Math.abs(velocity[1]) > 0.007) playBoing();
         } else if (top > 1) {
             velocity[1] *= -elasticness;
             position[1] = (1-0.01 - Math.abs(top - position[1]) + position[1])/2;
+            if (Math.abs(velocity[1]) > 0.007) playBoing();
         } 
 
     }
@@ -229,6 +239,7 @@ public class Polygon {
             other.velocity = new double[] { -other.elasticness * othMag * diffX / dist,
                     -other.elasticness * othMag * diffY / dist };
 
+            if (Math.max(velMag, othMag) > 0.007) playBoing();
             return true;
         }
 
@@ -259,7 +270,7 @@ public class Polygon {
             double[] orthoVector = new double[] {velocity[0] - projVector[0],velocity[1]-projVector[1]};
 
             velocity = new double[] {projVector[0]-elasticness*orthoVector[0],projVector[1]-elasticness*orthoVector[1]};
-
+            if (dot > 0.007) playBoing();
             /*double velMag = Math.sqrt(Math.pow(velocity[0], 2) + Math.pow(velocity[1], 2));
 
             double otherX = intersectsAt[0];

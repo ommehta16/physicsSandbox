@@ -19,6 +19,7 @@ public class Sandbox {
         double[] center = { inf, inf };
         double[] zapCenter = {inf,inf};
         ArrayList<double[]> plPoints = new ArrayList<double[]>();
+        boolean sound = true;
 
         Ball[] balls = new Ball[0];
         Polygon[] polys = new Polygon[0];
@@ -249,6 +250,17 @@ public class Sandbox {
         ArrayList<int[]> bpCollisions = new ArrayList<int[]>();
         ArrayList<int[]> bplCollisions = new ArrayList<int[]>();
         ArrayList<int[]> pplCollisions = new ArrayList<int[]>();
+
+        int totalObjects = balls.length + polys.length + polylines.length;
+
+        if (totalObjects > 20) {
+            for (int i = 0; i < balls.length; i++) if (balls[i].sound) balls[i].sound = false;
+            for (int i = 0; i < polys.length; i++) if (polys[i].sound) polys[i].sound = false;
+        }
+        else {
+            for (int i = 0; i < balls.length; i++) if (!balls[i].sound) balls[i].sound = true;
+            for (int i = 0; i < polys.length; i++) if (!polys[i].sound) polys[i].sound = true;
+        }
 
         for (int i = 0; i < balls.length; i++) {
             balls[i].bounceWall();

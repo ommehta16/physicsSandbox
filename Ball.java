@@ -7,6 +7,7 @@ public class Ball {
     private double gravity;
     private double[] velocity;
     private Color color;
+    public boolean sound;
 
     public Ball(double[] pos, double[] vel, double r, double elastic, Color col) {
         position = pos;
@@ -15,6 +16,7 @@ public class Ball {
         elasticness = elastic;
         gravity = 0.001;
         color = col;
+        sound = true;
     }
 
     public void move() {
@@ -25,23 +27,29 @@ public class Ball {
         velocity[0] *= 0.98;
         velocity[1] *= 0.98;
     }
-
+    public void playBoing() {
+        if (sound) StdAudio.playInBackground("boing.wav");
+    }
     public void bounceWall() {
         if (position[0] - radius <= -0.9) {
             velocity[0] *= -elasticness;
             position[0] = (-0.9+0.01 + radius + 3 * position[0]) / 4;
+            if (Math.abs(velocity[0]) > 0.007) playBoing();
         }
         if (position[0] + radius >= 1) {
             velocity[0] *= -elasticness;
             position[0] = (1-0.01 - radius + 3 * position[0]) / 4;
+            if (Math.abs(velocity[0]) > 0.007) playBoing();
         }
         if (position[1] - radius <= -1) {
             velocity[1] *= -elasticness;
             position[1] = (-1+0.01 + radius + 3 * position[1]) / 4;
+            if (Math.abs(velocity[1]) > 0.007) playBoing();
         }
         if (position[1] + radius >= 1) {
             velocity[1] *= -elasticness;
             position[1] = (1-0.01 - radius + 3 * position[1]) / 4;
+            if (Math.abs(velocity[1]) > 0.007) playBoing();
         }
     }
 
@@ -58,6 +66,7 @@ public class Ball {
 
         velocity =      new double[] { elasticness *  velMag * diffX / dist, elasticness *  velMag * diffY / dist };
         other.velocity= new double[] { elasticness * -othMag * diffX / dist, elasticness * -othMag * diffY / dist };
+        if (Math.max(velMag,othMag) > 0.007) playBoing();
         return true;
     }
 
@@ -75,6 +84,7 @@ public class Ball {
 
             velocity = new double[] { elasticness * velMag * diffX / dist, elasticness * velMag * diffY / dist };
             other.setVel(new double[] {  other.getElastic() * -othMag * diffX / dist, other.getElastic() * -othMag * diffY / dist });
+            if (Math.max(velMag,othMag) > 0.007) playBoing();
             return true;
         }
 
@@ -130,6 +140,7 @@ public class Ball {
         other.setVel(new double[] { other.getElastic()  * -othMag * diffX / dist,
                                     other.getElastic()  * -othMag * diffY / dist });
 
+        if (Math.max(velMag,othMag) > 0.007) playBoing();
         return true;
     }
     
@@ -161,15 +172,17 @@ public class Ball {
         double[] orthoVector = new double[] {velocity[0] - projVector[0],velocity[1]-projVector[1]};
 
         velocity = new double[] {projVector[0]-elasticness*orthoVector[0],projVector[1]-elasticness*orthoVector[1]};
+        double velMag = Math.sqrt(Math.pow(velocity[1], 2) + Math.pow(velocity[0], 2));
 
         if (dist < 0.5 * radius) {
             double diffX = position[0] - x;
             double diffY = position[1] - y;
-            double velMag = Math.sqrt(Math.pow(velocity[1], 2) + Math.pow(velocity[0], 2));
-
+            
             velocity = new double[] { velMag * diffX / dist, velMag * diffY / dist };
             position = new double[] {position[0]+velocity[0],position[1]+velocity[1]};
         }
+
+        if (velMag > 0.007) playBoing();
 
         return true;
     }
