@@ -37,3 +37,32 @@ The most intensive part of the program were collisions. These required ternary s
  - Polylines are created by clicking on each desired point (or click-dragging over them), and then pressing the space bar to finalize the shape
  - The "X" button *zaps* the closest object: the circle or polygon that is closest to the mouse pointer will be deleted
  - The reload button *resets* the entire environment. All circles, polygons and polylines will be deleted.
+
+# Data Types
+ - The project uses the `double` type for most values, and mostly stores those doubles in 1D and 2D arrays.
+ - It uses the `Color` type to set the color of objects
+ - `Arraylist` was used to track intersections
+ - I created the ADTs `Ball`, `Polygon` and `Polyline` to store info about each type of object
+# Methods in ADTs
+ - `void draw()` to draw the object (Ball, Polygon and Polyline)
+ - `void playBoing()` which plays a boing sound if the object has audio turned on (Ball, Polygon and Polyline)
+ - `void bounceWall()` which checks, and subsequently bounces the object off of all applicable walls (Ball, Polygon and Polyline)
+ - `boolean collide(Polygon|Polyline|Ball other)` collides the two if applicable, then returns true if they collided, false if they didn't
+
+For Polygon:
+ - `void updatePoints()` which sets the points array of a Polygon to match its current position (Polygon)
+ - `double[] closestPoint(double[] point, double error)` which provides the point on a Polygon/Polyline that is closest to the inputted point, within the specified margin of error
+ - `double[] intersectLine(double[] start, double[] end)` which finds where a given line intersects with the edges of a Polygon (will return infinity,infinity if it can't find an intersection)
+ - `boolean containsPoint(double[] point)` which tells whether a Polygon contains a point
+ - All applicable getters and setters are self-explanatory (get/set Pos, Points, Vel, Len, Elastic)
+
+
+For Polyline:
+ - `double[] closestPoint(double[] point, double error)` which provides the point on a Polygon/Polyline that is closest to the inputted point, within the specified margin of error
+ - All applicable getters and setters are self-explanatory (get/set Points, Elastic)
+
+For Ball:
+ - All applicable getters and setters are self-explanatory (get/set Pos, Vel, Rad, Elastic)
+
+# Known Bugs
+ - Polygon-Polygon collisions will occassionally fail by colliding at the y-coord of a vertex on one object, even though the other object does not physically collide
